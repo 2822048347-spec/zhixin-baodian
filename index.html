@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#003060">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="智心宝典">
+<link rel="manifest" href="manifest.json?v=12">
+<link rel="apple-touch-icon" href="icon-192.png?v=12">
+<link rel="icon" type="image/png" href="icon-192.png?v=12">
+<link rel="stylesheet" href="style.css?v=12">
+<title>智心宝典 · HRV与精神压力刷题</title>
+<script>
+/* ===== 旧 Service Worker 自动清理（一次性）=====
+ * 通过 ?nocache=1 参数访问时，注销所有旧 SW + 清空所有缓存，
+ * 然后重定向到干净 URL。这样旧缓存彻底清掉，新版代码生效。
+ * 清理完成后正常注册新 SW（网络优先策略），支持离线。 */
+(function () {
+  var url = new URL(location.href);
+  if (url.searchParams.has("nocache")) {
+    var tasks = [];
+    if ("serviceWorker" in navigator) {
+      tasks.push(
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        })
+      );
+    }
+    if ("caches" in window) {
+      tasks.push(
+        caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        })
+      );
+    }
+    Promise.all(tasks).then(function () {
+      url.searchParams.delete("nocache");
+      var clean = url.toString();
+      location.replace(clean);
+    });
+    return; // 阻止后续脚本执行，等待重定向
+  }
+})();
+</script>
+</head>
+<body>
+<div class="quiz-app" id="quizRoot"></div>
+
+<script src="quiz-data.js?v=12"></script>
+<script src="quiz-app.js?v=12"></script>
+<script>
+/* 初始化：把刷题应用挂载到容器
+ * 并入智心同检时，只需把 quiz-data.js / quiz-app.js / style.css 引入，
+ * 在目标页面放一个 <div id="quizRoot"></div>，再调用这行即可 */
+(function () {
+  if (window.QuizApp && document.getElementById("quizRoot")) {
+    QuizApp.init(document.getElementById("quizRoot"));
+  }
+
+  /* 注册 Service Worker 实现离线
+   * 并入智心同检时，这部分作废，改用智心同检自己的 sw.js */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js?v=12").catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
